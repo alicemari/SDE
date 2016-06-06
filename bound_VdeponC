@@ -1,0 +1,444 @@
+close all
+
+clear all
+%% FP-SDE as pag 97
+randn('state',100) %select one to be reproducible
+ Xzero = 0;  % CI
+D=1; %diffusion coefficient
+M=1000;% number of particles
+T = 1; N = 100; dt = T/N;         
+dW = ((randn(N,M)));         % Brownian increments
+W = cumsum(dW);  % discretized Brownian path 
+A=5;  %drift compoent
+Xtemp=Xzero;
+
+for k=1:M  %loop for each cell
+    
+    Xtemp=Xzero;
+   
+for j = 1:N    %time loop
+  
+%  Xtemp = sqrt(dt*2*D)*W(j,k); %free diffusion
+Xtemp = sqrt(dt*2*D)*dW(j,k)+Xtemp+A*dt;  %diffusion + drift
+   Xem(j) = Xtemp; %update position
+end
+
+hold on
+plot([0:dt:T],[Xzero,Xem],'b') %plot of the path
+hold on
+
+Xk(k,:)=Xem; %record the path
+end
+
+for i=1:N
+    bb=Xk(:,i);
+     mean1(i)=sum((bb))./M;
+    var_s(i)=(sum((bb.*bb)))./M -( mean1(i)*mean1(i)); % variance 
+    %mean centre of mass
+    
+end
+    for i=2:N
+    bb=Xk(:,i);
+    bb1=Xk(:,i-1);
+    corre(i)=(sum((bb.*bb1)))./M; %correlation
+end
+xlabel('t','FontSize',12)
+ylabel('X','FontSize',16,'Rotation',0,'HorizontalAlignment','right')
+figure(30)
+plot(corre)
+
+%% PDE with initial delta distribution
+
+load('logsensing_Ka_smalldeltax_D1f_v5=1.00000_R=1.00000.mat')
+L=length(t);
+dx=0.001; %time discratization in the PDE solver
+for i=1:L
+%     mm=min(sol(i,:,1));
+%         MM=max(sol(i,:,1));
+R=sol(i,:,1);
+    ext=find(R>0.005);
+    
+    s(i)=length(ext);
+    v(i)=[(0.5*dx*(-s(i)))];
+        v2(i)=[(0.5*dx*(s(i)))];
+         mean1d(i)=  trapz(x,x.*R);  
+    vari(i)=trapz(x,x.*x.*R)-(mean1d(i).*mean1d(i)); %variance
+        
+%         VV(i)=(var(sol(i,:,1)));
+%         v(i)=[((-VV(i)))];
+%         v2(i)=[((VV(i)))]; 
+   %centre of mass
+figure(1)
+% % plot([mm,MM])
+%   plot(v)
+%   hold on
+% hold ons(1)
+
+% plot(sol(i,:,1),x)
+% hold on
+
+end
+hold on
+ plot(t,v,'r')
+ hold  on
+  plot(t,v2,'r')
+  
+  %% two variance
+  figure(2)
+  plot(vari) %variance for PDE
+  hold on
+  (plot(var_s)) %variance for FP
+  
+  %% two mean
+  
+figure(100)
+
+  plot(mean1d)
+  hold on
+  plot(mean1)
+  %%
+  close all
+
+clear all
+%% FP-SDE- boudaries free diffusion
+%simulation of a particles that moves in a channel: lenght 8
+randn('state',100) %select one to be reproducible
+ Xzero = 0;  % CI
+D=1; %diffusion coefficient
+M=1000;% number of particles
+T = 1; N = 100; dt = T/N;         
+dW = ((randn(N,M)));         % Brownian increments
+W = cumsum(dW);  % discretized Brownian path 
+A=5;  %drift compoent
+Xtemp=Xzero;
+
+for k=1:M  %loop for each cell
+    
+    Xtemp=Xzero;
+    Xtempv=Xzero;
+     Xtempn=Xzero;
+for j = 1:N    %time loop
+  
+ 
+  Xtempn = sqrt(dt*2*D)*dW(j,k)+Xtempv;  %diffusion + drift
+   
+   %free diffusion
+  if Xtempn<-4
+     Xtempn = Xtempv;
+  end
+  if Xtempn>4
+      Xtempn =  Xtempv;
+  end
+ %update position
+ Xtempv=Xtempn;
+  Xem(j) = Xtempn;
+end
+
+plot([0:dt:T],[Xzero,Xem],'r') %plot of the path
+hold on
+
+Xk(k,:)=Xem; %record the path
+end
+
+for i=1:N
+    bb=Xk(:,i);
+    var_s(i)=(sum((bb.*bb)))./M; % variance 
+    mean1(i)=sum((bb))./M; %mean centre of mass
+    
+end
+    for i=2:N
+    bb=Xk(:,i);
+    bb1=Xk(:,i-1);
+    corre(i)=(sum((bb.*bb1)))./M; %correlation
+end
+xlabel('t','FontSize',12)
+ylabel('X','FontSize',16,'Rotation',0,'HorizontalAlignment','right')
+figure(30)
+plot(corre)
+
+%% PDE with initial delta distribution with boudaries (-4 - 4) free diffusion
+
+load('logsensing_Ka_smalldeltax_D1_bound=1.00000_R=1.00000.mat')
+L=length(t);
+dx=0.001; %time discratization in the PDE solver
+for i=1:L
+%     mm=min(sol(i,:,1));
+%         MM=max(sol(i,:,1));
+R=sol(i,:,1);
+    ext=find(R>0.005);
+    
+    s(i)=length(ext);
+    v(i)=[(0.5*dx*(-s(i)))];
+        v2(i)=[(0.5*dx*(s(i)))]; 
+    vari(i)=trapz(x,x.*x.*R); %variance
+        
+%         VV(i)=(var(sol(i,:,1)));
+%         v(i)=[((-VV(i)))];
+%         v2(i)=[((VV(i)))]; 
+    mean1d(i)=  trapz(x,x.*R);  %centre of mass
+figure(1)
+% % plot([mm,MM])
+%   plot(v)
+%   hold on
+% hold ons(1)
+
+% plot(sol(i,:,1),x)
+% hold on
+
+end
+hold on
+ plot(t,v,'b')
+ hold  on
+  plot(t,v2,'b')
+   %% two variance
+  figure(2)
+  plot(vari) %variance for PDE
+  hold on
+  (plot(var_s)) %variance for FP
+  %%
+  close all
+  clear all
+
+%% FP-SDE- boudaries velocity
+%simulation of a particles that moves in a channel: lenght 8
+randn('state',100) %select one to be reproducible
+ Xzero = 0;  % CI
+D=1; %diffusion coefficient
+M=1000;% number of particles
+T = 1; N = 100; dt = T/N;         
+dW = ((randn(N,M)));         % Brownian increments
+W = cumsum(dW);  % discretized Brownian path 
+A=5;  %drift compoent
+Xtemp=Xzero;
+
+for k=1:M  %loop for each cell
+    
+    Xtemp=Xzero;
+   Xtempn=Xzero;
+   Xtempv=Xzero;
+for j = 1:N    %time loop
+  
+ 
+ Xtempn = sqrt(dt*2*D)*dW(j,k)+Xtempv+A*dt;;  %diffusion + drift
+   
+   %free diffusion
+  if Xtempn<-4
+     Xtempn = Xtempv;
+  end
+  if Xtempn>4
+      Xtempn =  Xtempv;
+  end
+  Xtempv=Xtempn;
+  Xem(j) = Xtempn;
+%Xtemp = sqrt(dt*2*D)*dW(j,k)+Xtemp+A*dt;  %diffusion + drift
+ %update position
+end
+
+
+plot([0:dt:T],[Xzero,Xem],'r') %plot of the path
+hold on
+
+Xk(k,:)=Xem; %record the path
+end
+
+for i=1:N
+    bb=Xk(:,i);
+ 
+    mean1(i)=sum((bb))./M; %mean centre of mass
+       var_s(i)=(sum((bb.*bb))./M)-(mean1(i).*mean1(i)); % variance 
+ 
+end
+    for i=2:N
+    bb=Xk(:,i);
+    bb1=Xk(:,i-1);
+    corre(i)=(sum((bb.*bb1)))./M; %correlation
+end
+xlabel('t','FontSize',12)
+ylabel('X','FontSize',16,'Rotation',0,'HorizontalAlignment','right')
+figure(30)
+plot(corre)
+
+%% PDE with initial delta distribution with boudaries (-4 - 4) velocity
+
+load('logsensing_Ka_smalldeltax_D1_bound_v5=1.00000_R=1.00000.mat')
+L=length(t);
+dx=0.001; %time discratization in the PDE solver
+for i=1:L
+%     mm=min(sol(i,:,1));
+%         MM=max(sol(i,:,1));
+R=sol(i,:,1);
+    ext=find(R>0.005);
+    
+    s(i)=length(ext);
+    v(i)=[(0.5*dx*(-s(i)))];
+        v2(i)=[(0.5*dx*(s(i)))]; 
+         mean1d(i)=  trapz(x,x.*R);
+    vari(i)=trapz(x,x.*x.*R)-(mean1d(i).*mean1d(i)); %variance
+        
+%         VV(i)=(var(sol(i,:,1)));
+%         v(i)=[((-VV(i)))];
+%         v2(i)=[((VV(i)))]; 
+    mean1d(i)=  trapz(x,x.*R);  %centre of mass
+figure(1)
+% % plot([mm,MM])
+%   plot(v)
+%   hold on
+% hold ons(1)
+
+% plot(sol(i,:,1),x)
+% hold on
+
+end
+hold on
+ plot(t,v,'b')
+ hold  on
+  plot(t,v2,'b')
+   %% two variance
+  figure(2)
+  plot(vari,'b') %variance for PDE
+  hold on
+  plot((var_s),'r') %variance for FP
+
+  
+  %% two mean
+  
+figure(100)
+
+  plot(mean1d)
+  hold on
+  plot(mean1)
+  %%
+  close all
+  clear all
+
+%% FP-SDE- boudaries velocity-dependence of V on C
+%simulation of a particles that moves in a channel: lenght 8
+randn('state',100) %select one to be reproducible
+ Xzero = 0;  % CI
+D=1; %diffusion coefficient
+M=5000;% number of particles
+
+Cmax=1;
+C0=Xzero*Cmax/8 + Cmax/2;%linear gradient from 0 at x=-4 till Cmax at x=4;
+%insert to check the concentration profile
+% x=[-4:0.001:4]; 
+% C0=x*Cmax/8 + Cmax/2;
+% figure(1000)
+% plot(x,C0)
+
+T = 1; N = 1000; dt = T/N;         
+dW = ((randn(N,M)));         % Brownian increments
+W = cumsum(dW);  % discretized Brownian path 
+Ki=0.001;
+Ka=100;
+
+A= (Cmax*(Ka-Ki)/8)/((Ki+C0)*(Ka+C0));  %drift compoent, now it depends on C as PDE (Cmax/8 is the derivative of C)
+A=C0;
+%Xtemp=Xzero;
+
+for k=1:M  %loop for each cell
+    A= (Cmax*(Ka-Ki)/8)/((Ki+C0)*(Ka+C0));
+ %   A=C0;
+    Xtemp=Xzero;
+   Xtempn=Xzero;
+   Xtempv=Xzero;
+for j = 1:N    %time loop
+  
+ 
+ Xtempn = sqrt(dt*2*D)*dW(j,k)+Xtempv+A*dt;  %diffusion + drift
+ 
+   %free diffusion
+  if Xtempn<-4
+     Xtempn = Xtempv;
+  end
+  if Xtempn>4
+      Xtempn =  Xtempv;
+  end
+  Xtempv=Xtempn;
+  Xem(j) = Xtempn;
+  
+    C=Xtempn*Cmax/8 + Cmax/2; %new conc based on new position
+   %A=C;
+   A= ((Cmax/8)*(Ka-Ki))/((Ki+C)*(Ka+C)); %new velocity based on new concentration
+   
+%Xtemp = sqrt(dt*2*D)*dW(j,k)+Xtemp+A*dt;  %diffusion + drift
+ %update position
+end
+
+
+plot([0:dt:T],[Xzero,Xem],'r') %plot of the path
+hold on
+
+Xk(k,:)=Xem; %record the path
+end
+
+for i=1:N
+    bb=Xk(:,i);
+ 
+    mean1(i)=sum((bb))./M; %mean centre of mass
+       var_s(i)=(sum((bb.*bb))./M)-(mean1(i).*mean1(i)); % variance 
+ 
+end
+    for i=2:N
+    bb=Xk(:,i);
+    bb1=Xk(:,i-1);
+    corre(i)=(sum((bb.*bb1)))./M; %correlation
+end
+xlabel('t','FontSize',12)
+ylabel('X','FontSize',16,'Rotation',0,'HorizontalAlignment','right')
+figure(30)
+plot(corre)
+
+%% PDE with initial delta distribution with boudaries (-4 - 4) velocity
+
+load('logsensing_Ka_smalldeltax_D1_bound_vdeponC_dt=100.00000_R=1.00000.mat')
+L=length(t);
+dx=0.0005; %time discratization in the PDE solver
+for i=1:L
+%     mm=min(sol(i,:,1));
+%         MM=max(sol(i,:,1));
+R=sol(i,:,1);
+%plot(R)
+    ext=find(R>0.005);
+
+    s(i)=length(ext);
+    v(i)=[(0.5*dx*(-s(i)))];
+        v2(i)=[(0.5*dx*(s(i)))]; 
+         mean1d(i)=  trapz(x,x.*R);
+    vari(i)=trapz(x,x.*x.*R)-(mean1d(i).*mean1d(i)); %variance
+        
+%         VV(i)=(var(sol(i,:,1)));
+%         v(i)=[((-VV(i)))];
+%         v2(i)=[((VV(i)))]; 
+    mean1d(i)=  trapz(x,x.*R);  %centre of mass
+figure(1)
+% % plot([mm,MM])
+%   plot(v)
+%   hold on
+% hold ons(1)
+
+% plot(sol(i,:,1),x)
+% hold on
+
+end
+% hold on
+%  plot(t,v,'b')
+%  hold  on
+%   plot(t,v2,'b')
+   %% two variance
+   t1=[0:0.001:1];
+t2=linspace(0,1,1000);
+  plot(t2,var_s,t1,vari)
+  %plot(vari,'b') %variance for PDE
+ %figure(3)
+ % plot((var_s),'r') %variance for FP
+
+  
+  %% two mean
+  
+figure(100)
+t1=[0:0.001:1];
+t2=linspace(0,1,1000);
+  plot(t2,mean1,t1,mean1d)
+  hold on
+ % plot(mean1)
